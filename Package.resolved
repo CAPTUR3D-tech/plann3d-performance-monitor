@@ -1,13 +1,13 @@
 {
-  "originHash" : "9d6497da5f4a7f157d378005af0393a9bfd5d1ec2f22d619eaedeeeba49c9d05",
+  "originHash" : "75df5934b0bd2a5d656ba0ffcbd30d180d52db0cc91dc53759a16c441d668603",
   "pins" : [
     {
-      "identity" : "debugswift",
+      "identity" : "gdperformanceview-swift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/DebugSwift/DebugSwift",
+      "location" : "https://github.com/dani-gavrilov/GDPerformanceView-Swift.git",
       "state" : {
-        "revision" : "4bb3daceccecefe77502cac2cd148643e7917466",
-        "version" : "0.4.0"
+        "revision" : "171a656040135d667f4228c3ec82f2384770d87d",
+        "version" : "2.1.1"
       }
     }
   ],
