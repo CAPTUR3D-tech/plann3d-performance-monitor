@@ -18,6 +18,10 @@ public class PerformanceTracker: PerformanceMonitorDelegate {
     // Store snapshots in memory
     private var snapshots: [PerformanceSnapshot] = []
     
+    // FPS tracking between snapshots
+    private var fpsValues: [Int] = []
+    private var lastSnapshotTime: Date? = nil
+    
     // Singleton for easy access
     nonisolated(unsafe) public static let shared = PerformanceTracker()
     
@@ -34,6 +38,8 @@ public class PerformanceTracker: PerformanceMonitorDelegate {
         
         performanceMonitor?.start()
         isMonitoring = true
+        fpsValues.removeAll()
+        lastSnapshotTime = Date()
         print("Performance monitoring started.")
     }
     
@@ -53,9 +59,21 @@ public class PerformanceTracker: PerformanceMonitorDelegate {
         
         let memoryUsed = report.memoryUsage.used / 1024 / 1024  // Convert to MB
         let memoryTotal = report.memoryUsage.total / 1024 / 1024  // Convert to MB
- 
+        
+        // Calculate FPS stats
+        let currentFps = Int(report.fps)
+        let minFps = fpsValues.isEmpty ? currentFps : min(fpsValues.min() ?? currentFps, currentFps)
+        let maxFps = fpsValues.isEmpty ? currentFps : max(fpsValues.max() ?? currentFps, currentFps)
+        
+        // Calculate average including current FPS value
+        var totalFps = fpsValues.reduce(0, +) + currentFps
+        let avgFps = fpsValues.isEmpty ? currentFps : Int(totalFps / (fpsValues.count + 1))
+        
         let snapshot = PerformanceSnapshot(
-            fps: Int(report.fps),
+            fps: currentFps,
+            minFps: minFps,
+            maxFps: maxFps,
+            avgFps: avgFps,
             cpuUsage: Double(report.cpuUsage),
             memoryUsed: memoryUsed,
             memoryTotal: memoryTotal,
@@ -64,6 +82,10 @@ public class PerformanceTracker: PerformanceMonitorDelegate {
         
         // Store the snapshot
         snapshots.append(snapshot)
+        
+        // Reset FPS tracking for next interval
+        fpsValues.removeAll()
+        lastSnapshotTime = Date()
         
         return snapshot
     }
@@ -103,35 +125,34 @@ public class PerformanceTracker: PerformanceMonitorDelegate {
     }
     
     // MARK: - PerformanceMonitorDelegate
-    
     public func performanceMonitor(didReport performanceReport: PerformanceReport) {
         lastPerformanceReport = performanceReport
+        
+        // Store FPS value for stats calculation
+        if lastSnapshotTime != nil {
+            fpsValues.append(Int(performanceReport.fps))
+        }
     }
 }
 
-/// A simple struct that captures performance metrics
+/// Snapshot of performance metrics
 public struct PerformanceSnapshot {
-    /// The timestamp when the snapshot was created
+
     public let timestamp: Date
-    
-    /// Frames per second
-    public let fps: Int
-    
-    /// CPU usage percentage (0-100)
+    public let minFps: Int
+    public let maxFps: Int
+    public let avgFps: Int
     public let cpuUsage: Double
-    
-    /// Memory used in bytes
     public let memoryUsed: UInt64
-    
-    /// Total available memory in bytes
     public let memoryTotal: UInt64
-    
-    /// Metadata string
     public let metadata: [String: String]
     
     /// Creates a new performance snapshot
     public init(
         fps: Int,
+        minFps: Int,
+        maxFps: Int,
+        avgFps: Int,
         cpuUsage: Double,
         memoryUsed: UInt64,
         memoryTotal: UInt64,
@@ -139,7 +160,9 @@ public struct PerformanceSnapshot {
         timestamp: Date = Date()
     ) {
         self.timestamp = timestamp
-        self.fps = fps
+        self.minFps = minFps
+        self.maxFps = maxFps
+        self.avgFps = avgFps
         self.cpuUsage = cpuUsage
         self.memoryUsed = memoryUsed
         self.memoryTotal = memoryTotal
@@ -150,7 +173,7 @@ public struct PerformanceSnapshot {
         let timeFormatter = DateFormatter()
         timeFormatter.dateFormat = "HH:mm:ss"
         
-        var result = "[\(timeFormatter.string(from: timestamp))] FPS: \(Int(fps)), CPU: \(String(format: "%.1f", cpuUsage))%, Mem: \(memoryUsed)/\(memoryTotal)MB"
+        var result = "[\(timeFormatter.string(from: timestamp))] FPS: (min: \(minFps), max: \(maxFps), avg: \(avgFps)), CPU: \(String(format: "%.1f", cpuUsage))%, Mem: \(memoryUsed)/\(memoryTotal)MB"
         
         if !metadata.isEmpty {
             let metadataStr = metadata.map {
@@ -174,7 +197,9 @@ public struct PerformanceSnapshot {
         // Start with the basic metrics
         var csvParts = [
             timeString,
-            String(fps),
+            String(minFps),
+            String(maxFps),
+            String(avgFps),
             String(cpuUsage),
             String(memoryUsed),
             String(memoryTotal)
@@ -182,7 +207,6 @@ public struct PerformanceSnapshot {
         
         // Add metadata key-value pairs
         for (key, value) in metadata {
-            // Escape quotes in the value for CSV compatibility
             let escapedValue = value.replacingOccurrences(of: "\"", with: "\"\"")
             csvParts.append("\(key):\"\(escapedValue)\"")
         }
@@ -194,7 +218,9 @@ public struct PerformanceSnapshot {
     public func csvHeader() -> String {
         var headerParts = [
             "Timestamp",
-            "FPS",
+            "FPS (min)",
+            "FPS (max)",
+            "FPS (average)",
             "CPU Usage (%)",
             "Memory Used (bytes)",
             "Memory Total (bytes)"
