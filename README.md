@@ -9,7 +9,7 @@ A Swift performance monitor to be used to track fps, cpu, memory, etc inside iOS
 1. In Xcode, select **File > Add Packages...**
 2. Enter the repository URL:
    ```
-   https://github.com/CAPTUR3D-tech/plann3d-performance-monitor.git
+   git@github.com:CAPTUR3D-tech/plann3d-performance-monitor.git
    ```
 3. Select the version rule (e.g., "Up to Next Major" version)
 4. Click **Add Package**
