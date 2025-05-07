@@ -13,8 +13,10 @@ public class PerformanceTracker: PerformanceMonitorDelegate {
     
     private var performanceMonitor: PerformanceMonitor?
     private var isMonitoring = false
-    
     private var lastPerformanceReport: PerformanceReport? = nil
+    
+    // Store snapshots in memory
+    private var snapshots: [PerformanceSnapshot] = []
     
     // Singleton for easy access
     nonisolated(unsafe) public static let shared = PerformanceTracker()
@@ -44,27 +46,64 @@ public class PerformanceTracker: PerformanceMonitorDelegate {
     }
     
     public func takeSnapshot(metadata: [String:String]) -> PerformanceSnapshot? {
-        
         guard let report = lastPerformanceReport else {
-            print ("Unable to capture performance report.")
+            print("Unable to capture performance report.")
             return nil
         }
         
-        let cpuUsage = report.cpuUsage
-        let fps = report.fps
         let memoryUsed = report.memoryUsage.used / 1024 / 1024  // Convert to MB
         let memoryTotal = report.memoryUsage.total / 1024 / 1024  // Convert to MB
  
-        return PerformanceSnapshot(
-            fps: report.fps,
-            cpuUsage: report.cpuUsage,
+        let snapshot = PerformanceSnapshot(
+            fps: Int(report.fps),
+            cpuUsage: Double(report.cpuUsage),
             memoryUsed: memoryUsed,
             memoryTotal: memoryTotal,
             metadata: metadata
         )
+        
+        // Store the snapshot
+        snapshots.append(snapshot)
+        
+        return snapshot
+    }
+    
+    /// Write all collected snapshots to a CSV file
+    /// - Parameter filePath: Path where the CSV file should be saved
+    /// - Returns: Boolean indicating success or failure
+    public func writeSnapshotsToFile(filePath: String) -> Bool {
+        guard !snapshots.isEmpty else {
+            print("No snapshots to write to file")
+            return false
+        }
+        
+        do {
+            // Create CSV content starting with the header
+            let header = snapshots[0].csvHeader()
+            var csvContent = header + "\n"
+            
+            // Add all snapshots as rows
+            for snapshot in snapshots {
+                csvContent += snapshot.toCSV() + "\n"
+            }
+            
+            // Write to file
+            try csvContent.write(to: URL(fileURLWithPath: filePath), atomically: true, encoding: .utf8)
+            print("Performance data written to: \(filePath)")
+            return true
+        } catch {
+            print("Error writing performance data to file: \(error.localizedDescription)")
+            return false
+        }
+    }
+    
+    /// Clear all stored snapshots
+    public func clearSnapshots() {
+        snapshots.removeAll()
     }
     
     // MARK: - PerformanceMonitorDelegate
+    
     public func performanceMonitor(didReport performanceReport: PerformanceReport) {
         lastPerformanceReport = performanceReport
     }
