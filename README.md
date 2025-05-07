@@ -16,7 +16,7 @@ A Swift performance monitor to be used to track cpu, memory, etc inside iOS proj
 
 ### Dependencies
 
-This package requires GDPerformanceView-Swift which will be automatically installed with Swift Package Manager.
+This package requires [GDPerformanceView-Swift](https://github.com/dani-gavrilov/GDPerformanceView-Swift) which will be automatically installed with Swift Package Manager.
 
 ## Usage
 
