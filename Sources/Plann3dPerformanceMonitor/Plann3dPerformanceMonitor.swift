@@ -6,6 +6,7 @@ import DebugSwift
 
 public class PerformanceMonitor {
     @MainActor public static let shared = PerformanceMonitor()
+    private let memoryQueue = DispatchQueue(label: "com.plann3d.memoryMonitoring")
     
     private init() {}
     
@@ -15,6 +16,19 @@ public class PerformanceMonitor {
     
     public func stop() {
         print("Performance monitoring stopped")
+    }
+
+    // Get available memory in bytes
+    func getAvailableMemory() -> Int {
+        return os_proc_available_memory()
+    }
+    
+    // Convert to human-readable format
+    func getFormattedAvailableMemory() -> String {
+        let bytes = getAvailableMemory()
+        let megabytes = Double(bytes) / (1024 * 1024)
+        
+        return String(format: "%.2f MB", megabytes)
     }
     
     public func trackEvent(_ name: String, block: () -> Void) {
