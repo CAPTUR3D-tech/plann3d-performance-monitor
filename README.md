@@ -1,6 +1,6 @@
 # Plann3d Performance Monitor
 
-A Swift performance monitor to be used to track cpu, memory, etc inside iOS projects
+A Swift performance monitor to be used to track fps, cpu, memory, etc inside iOS projects
 
 ## Installation
 
@@ -27,11 +27,11 @@ import Plann3dPerformanceMonitor
 PerformanceTracker.shared.startMonitoring()
 
 // Take snapshots at key points in your app
-let snapshot = PerformanceTracker.shared.takeSnapshot(metadata: ["scanTime": "10"])
+let snapshot = PerformanceTracker.shared.takeSnapshot(metadata: ["Section": "08C88F61-6AAD-44B4-8DE4-2888A91059A8"])
 
 // Log snapshot
 print(snapshot.toString())
-// Output: [14:32:05] FPS: 58, CPU: 23.7%, Mem: 128/4000MB (screen:HomeView)
+// Output: [15:40:27] FPS: (min: 2, max: 61, avg: 57), CPU: 135.8%, Mem: 777/5719MB (Section:08C88F61-6AAD-44B4-8DE4-2888A91059A8)
 
 // Export all collected snapshots to CSV
 PerformanceTracker.shared.writeSnapshotsToFile(filePath: "/path/to/performance_log.csv")
