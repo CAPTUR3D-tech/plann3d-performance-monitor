@@ -222,8 +222,8 @@ public struct PerformanceSnapshot {
             "FPS (max)",
             "FPS (average)",
             "CPU Usage (%)",
-            "Memory Used (bytes)",
-            "Memory Total (bytes)"
+            "Memory Used (MB)",
+            "Memory Total (MB)"
         ]
         
         // Add metadata keys as column headers
